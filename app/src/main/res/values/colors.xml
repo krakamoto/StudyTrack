@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- StudyTrack Brand Colors -->
+    <color name="study_red">#E50914</color>
+    <color name="study_red_dark">#B0070F</color>
+    <color name="study_red_light">#FF5A5F</color>
+
+    <!-- Background & Surface -->
+    <color name="bg_deep_navy">#1A1A2E</color>
+    <color name="surface_purple_night">#252545</color>
+    <color name="surface_variant">#2E2E50</color>
+
+    <!-- Accent & Containers -->
+    <color name="accent_purple">#7B61FF</color>
+    <color name="accent_container">#3D3B6E</color>
+
+    <!-- Typography & Text -->
+    <color name="on_background">#EAEAEA</color>
+    <color name="on_surface">#D0D0E0</color>
+    <color name="on_surface_variant">#AAABCC</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <!-- Utility & Feedback -->
+    <color name="outline">#4A4A6A</color>
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FFC107</color>
+    <color name="error">#CF6679</color>
+</resources>

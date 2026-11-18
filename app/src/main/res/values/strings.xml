@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Details -->
+    <string name="app_name">StudyTrack</string>
+    <string name="app_description">Toggl Track-style study time tracker with analytics, goals, and flexible manual adjustments</string>
+
+    <!-- Navigation -->
+    <string name="nav_timer">Timer</string>
+    <string name="nav_history">History</string>
+    <string name="nav_statistics">Statistics</string>
+    <string name="nav_projects">Projects</string>
+
+    <!-- Timer Screen -->
+    <string name="timer_hint_description">What are you studying?</string>
+    <string name="timer_project_label">Project</string>
+    <string name="timer_no_project">No project</string>
+    <string name="timer_start">Start</string>
+    <string name="timer_stop">Stop</string>
+    <string name="timer_today_header">TODAY</string>
+    <string name="timer_no_description">(No description)</string>
+
+    <!-- Edit Entry Screen / Dialog -->
+    <string name="edit_entry_title">Edit Entry</string>
+    <string name="edit_entry_description">Description</string>
+    <string name="edit_entry_project">Project</string>
+    <string name="edit_entry_date">Date</string>
+    <string name="edit_entry_start">Start</string>
+    <string name="edit_entry_end">End</string>
+    <string name="edit_entry_running">Running</string>
+    <string name="edit_entry_save">Save Changes</string>
+    <string name="edit_entry_delete">Delete Entry</string>
+    <string name="edit_entry_delete_confirm_title">Delete Entry?</string>
+    <string name="edit_entry_delete_confirm_message">This action cannot be undone.</string>
+
+    <!-- Statistics Screen -->
+    <string name="stats_title">Statistics</string>
+    <string name="stats_tab_daily">Daily</string>
+    <string name="stats_tab_weekly">Weekly</string>
+    <string name="stats_tab_monthly">Monthly</string>
+    <string name="stats_card_today">Today</string>
+    <string name="stats_card_best_day">Best Day</string>
+    <string name="stats_card_avg_day">Avg/Day</string>
+    <string name="stats_card_this_week">This Week</string>
+    <string name="stats_card_streak">Streak</string>
+    <string name="stats_by_project_header">BY PROJECT</string>
+    <string name="stats_no_data">No data for this period</string>
+
+    <!-- Projects Screen -->
+    <string name="projects_title">Projects</string>
+    <string name="projects_add">Add Project</string>
+    <string name="projects_new_title">New Project</string>
+    <string name="projects_edit_title">Edit Project</string>
+    <string name="projects_name_label">Project Name</string>
+    <string name="projects_color_label">Color</string>
+    <string name="projects_delete_confirm_title">Delete Project?</string>
+    <string name="projects_delete_confirm_message">\"%1$s\" will be removed. Time entries won\'t be deleted.</string>
+    <string name="projects_empty_state">No projects yet.\nTap + to add one.</string>
+
+    <!-- History Screen -->
+    <string name="history_title">History</string>
+    <string name="history_filter">Filter</string>
+    <string name="history_all_projects">All projects</string>
+    <string name="history_empty_state">No entries yet.\nStart tracking to see your history.</string>
+    <string name="history_delete">Delete</string>
+
+    <!-- Common Actions -->
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_back">Back</string>
+</resources>
