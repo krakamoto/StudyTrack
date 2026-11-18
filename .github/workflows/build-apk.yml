@@ -1,0 +1,59 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build StudyTrack APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build Debug APK
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyTrack-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.0
+          name: "StudyTrack v1.0.0 (Debug APK)"
+          body: |
+            ### ⏱️ StudyTrack v1.0.0
+            
+            Prima release dell'app Android **StudyTrack** (Toggl Track per lo studio).
+            
+            - 📱 Compatibile con Android 8.0+ (API 26+)
+            - ⏱️ Timer con controlli in stile Toggl, display circolare e animazione pulsante
+            - ✏️ Modifica retroattiva orari di inizio e fine sessione (Time & Date picker)
+            - 📊 Statistiche con grafici Vico (giornaliero, settimanale, mensile) e metriche avanzate (streak, media)
+            - 📁 Gestione materie con palette colori
+            
+            Scarica il file `app-debug.apk` qui sotto per installarlo direttamente sul tuo smartphone Android!
+          files: app/build/outputs/apk/debug/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
