@@ -21,6 +21,7 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.studytrack.data.dao.DailyTotal
 
@@ -227,7 +228,7 @@ private fun BarChartSection(
                 rememberColumnCartesianLayer(),
                 startAxis = rememberStartAxis(),
                 bottomAxis = rememberBottomAxis(
-                    valueFormatter = { _, value, _ ->
+                    valueFormatter = CartesianValueFormatter { _, value, _ ->
                         data.getOrNull(value.toInt())?.date?.takeLast(5) ?: ""
                     }
                 )
