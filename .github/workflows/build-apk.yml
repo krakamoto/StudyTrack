@@ -40,18 +40,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.2.0
-          name: "StudyTrack v1.2.0 (Backup, statistiche e UX)"
+          tag_name: v1.3.0
+          name: "StudyTrack v1.3.0 (Productivity Analytics)"
           body: |
-            ### ⏱️ StudyTrack v1.2.0
+            ### ⏱️ StudyTrack v1.3.0 — Productivity Analytics
 
             Novità:
-            - 💾 **Backup e ripristino JSON** con validazione e conferma prima dell'import.
-            - 📊 **Statistiche corrette**: grafici con giorni/settimane/mesi vuoti, streak reale e medie affidabili.
-            - ✏️ **Timer modificabile mentre è attivo**: descrizione e progetto vengono salvati automaticamente.
-            - ↩️ **Undo dopo l'eliminazione** di una sessione dalla cronologia.
-            - ✅ **Validazione degli orari** e prevenzione dei duplicati nei progetti.
-            - ⚙️ Nuova schermata **Impostazioni** per backup, ripristino ed eliminazione dei dati.
+            - 🎯 **Focus Score 0–100** basato su costanza, volume di studio, durata media e streak.
+            - 📈 **Trend settimanale** con confronto rispetto ai 7 giorni precedenti.
+            - 📊 **Grafico 14 giorni** con tempo giornaliero e media mobile a 7 giorni.
+            - 🕐 **Quando studi**: distribuzione per ora e giorno della settimana, ora e giorno più produttivi.
+            - 🧠 **Insight contestuali** per migliorare costanza e concentrazione.
+            - ✅ Calcolo preciso anche per sessioni a cavallo di ore e di mezzanotte.
 
             Scarica `app-debug.apk` qui sotto per installarlo sul tuo smartphone Android.
           files: app/build/outputs/apk/debug/*.apk

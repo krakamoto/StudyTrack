@@ -1,6 +1,6 @@
 # StudyTrack ⏱️📚
 
-**Versione 1.2.0** — app Android offline per monitorare sessioni di studio, con statistiche affidabili e backup portabile.
+**Versione 1.3.0** — app Android offline per monitorare sessioni di studio, con analisi della produttività, trend temporali e backup portabile.
 
 **StudyTrack** is a Toggl Track-style study time tracker for Android, designed to help students and self-learners track focus sessions, analyze productivity patterns, and stay accountable. Built with 100% Kotlin, Jetpack Compose, Material 3, and Clean Architecture.
 
@@ -19,12 +19,16 @@
   - Accessible via full-screen route or quick inline modal dialog (long-press from today's list).
   - Integrated 24-hour time pickers and calendar date dialogs.
 
-- **📊 Comprehensive Statistics**
-  - **Daily Tab**: Zero-filled 7-day chart, today's total, 7-day average, and best study day.
-  - **Weekly Tab**: Current week total, streak, and an 8-week trend.
-  - **Monthly Tab**: Current month total, streak, and a 12-month trend.
+- **📊 Comprehensive Statistics & Productivity Analytics**
+  - **Focus Score**: A 0–100 indicator combining consistency, study volume, average session length, and streak.
+  - **Week-over-week Trend**: Compares the last 7 days with the previous 7 and highlights improvements or declines.
+  - **14-Day Momentum Chart**: Daily study time plus a 7-day moving average, rendered with native Compose Canvas.
+  - **When You Study**: Hour-of-day and weekday distributions, peak productive hour, and best weekday across the last 30 days.
+  - **Daily / Weekly / Monthly Tabs**: Zero-filled charts for the last 7 days, 8 weeks, and 12 months.
   - **Project Breakdown**: Visual percentage progress bars showing time invested per subject/project over the last 30 days.
-  - **Streak & Performance**: Correct streak calculation across the full study history, not just the visible week.
+  - **Useful KPIs**: Today, current week, number of sessions, average session duration, active days, consistency, and longest session.
+  - **Contextual Insight**: A short recommendation based on trend, consistency, focus score, and session length.
+  - Sessions crossing midnight or hour boundaries are split accurately across all statistics.
 
 - **📁 Project & Subject Management**
   - Group time entries into subjects/projects (e.g., Mathematics, Machine Learning, History).
