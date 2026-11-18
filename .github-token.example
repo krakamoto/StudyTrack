@@ -1,0 +1,3 @@
+# Crea una copia di questo file chiamata ".github-token" e incolla qui il PAT.
+# Permessi minimi consigliati: repository -> Contents = Read and write.
+# Esempio: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

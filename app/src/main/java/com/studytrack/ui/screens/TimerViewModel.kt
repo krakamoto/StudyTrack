@@ -25,7 +25,8 @@ data class TimerUiState(
     val recentEntries: List<TimeEntryEntity> = emptyList(),
     val projects: List<ProjectEntity> = emptyList(),
     val showProjectDropdown: Boolean = false,
-    val entryToEdit: TimeEntryEntity? = null
+    val entryToEdit: TimeEntryEntity? = null,
+    val isSyncing: Boolean = false
 ) {
     val elapsedDisplay: String
         get() {
@@ -51,6 +52,7 @@ class TimerViewModel @Inject constructor(
 
     private var tickJob: Job? = null
     private var runningStartTime: Long = 0L
+    private var metadataSaveJob: Job? = null
 
     init {
         observeRunningEntry()
@@ -134,10 +136,40 @@ class TimerViewModel @Inject constructor(
 
     fun onDescriptionChange(value: String) {
         _uiState.update { it.copy(description = value) }
+        scheduleRunningMetadataSave()
     }
 
     fun onProjectSelected(id: Long?) {
         _uiState.update { it.copy(selectedProjectId = id, showProjectDropdown = false) }
+        scheduleRunningMetadataSave()
+    }
+
+    /**
+     * The description and project of a running session stay editable. Writes
+     * are debounced so typing doesn't cause a database write per character.
+     */
+    private fun scheduleRunningMetadataSave() {
+        val state = _uiState.value
+        if (!state.isRunning || state.currentEntryId == null) return
+        metadataSaveJob?.cancel()
+        metadataSaveJob = viewModelScope.launch {
+            delay(350L)
+            persistRunningMetadata()
+        }
+    }
+
+    private suspend fun persistRunningMetadata() {
+        val state = _uiState.value
+        val entryId = state.currentEntryId ?: return
+        val entry = repository.getTimeEntryById(entryId) ?: return
+        val description = state.description.trim()
+        if (entry.description == description && entry.projectId == state.selectedProjectId) return
+        repository.updateTimeEntry(
+            entry.copy(
+                description = description,
+                projectId = state.selectedProjectId
+            )
+        )
     }
 
     fun toggleProjectDropdown() {
@@ -145,16 +177,33 @@ class TimerViewModel @Inject constructor(
     }
 
     fun start() {
+        val state = _uiState.value
+        if (state.isRunning || state.isSyncing) return
         viewModelScope.launch {
-            startTimerUseCase(
-                description = _uiState.value.description,
-                projectId = _uiState.value.selectedProjectId
-            )
+            _uiState.update { it.copy(isSyncing = true) }
+            try {
+                startTimerUseCase(
+                    description = state.description.trim(),
+                    projectId = state.selectedProjectId
+                )
+            } finally {
+                _uiState.update { it.copy(isSyncing = false) }
+            }
         }
     }
 
     fun stop() {
-        viewModelScope.launch { stopTimerUseCase() }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSyncing = true) }
+            try {
+                // Flush pending edits before the timer is closed.
+                metadataSaveJob?.cancel()
+                persistRunningMetadata()
+                stopTimerUseCase()
+            } finally {
+                _uiState.update { it.copy(isSyncing = false) }
+            }
+        }
     }
 
     fun openAdjustRunningStartTime() {
@@ -169,11 +218,14 @@ class TimerViewModel @Inject constructor(
 
     fun updateRunningStartTime(newStartTimeMillis: Long) {
         val entryId = _uiState.value.currentEntryId ?: return
-        runningStartTime = newStartTimeMillis
-        val newElapsed = (System.currentTimeMillis() - newStartTimeMillis).coerceAtLeast(0L)
+        // A session cannot start in the future. Clamp to now instead of
+        // silently displaying a negative or frozen timer.
+        val safeStartTime = newStartTimeMillis.coerceAtMost(System.currentTimeMillis())
+        runningStartTime = safeStartTime
+        val newElapsed = (System.currentTimeMillis() - safeStartTime).coerceAtLeast(0L)
         _uiState.update {
             it.copy(
-                runningStartTime = newStartTimeMillis,
+                runningStartTime = safeStartTime,
                 elapsedMillis = newElapsed,
                 showAdjustRunningStartTime = false
             )
@@ -181,8 +233,36 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             val entry = repository.getTimeEntryById(entryId)
             if (entry != null) {
-                repository.updateTimeEntry(entry.copy(startTime = newStartTimeMillis))
+                repository.updateTimeEntry(entry.copy(startTime = safeStartTime))
             }
+        }
+    }
+
+    fun saveEntryEdits(
+        entry: TimeEntryEntity,
+        description: String,
+        projectId: Long?,
+        startTime: Long,
+        endTime: Long?
+    ) {
+        viewModelScope.launch {
+            repository.updateTimeEntry(
+                entry.copy(
+                    description = description.trim(),
+                    projectId = projectId,
+                    startTime = startTime,
+                    endTime = endTime,
+                    isRunning = endTime == null
+                )
+            )
+            _uiState.update { it.copy(entryToEdit = null) }
+        }
+    }
+
+    fun deleteEntry(entry: TimeEntryEntity) {
+        viewModelScope.launch {
+            repository.deleteTimeEntry(entry.id)
+            _uiState.update { it.copy(entryToEdit = null) }
         }
     }
 

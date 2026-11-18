@@ -21,7 +21,8 @@ data class EditTimeEntryUiState(
     val projects: List<ProjectEntity> = emptyList(),
     val isSaving: Boolean = false,
     val isDeleting: Boolean = false,
-    val isDone: Boolean = false
+    val isDone: Boolean = false,
+    val errorMessage: String? = null
 )
 
 @HiltViewModel
@@ -73,27 +74,48 @@ class EditTimeEntryViewModel @Inject constructor(
     }
 
     fun onStartTimeChange(millis: Long) {
-        _uiState.update { it.copy(startTime = millis) }
+        _uiState.update { it.copy(startTime = millis, errorMessage = null) }
     }
 
     fun onEndTimeChange(millis: Long) {
-        _uiState.update { it.copy(endTime = millis) }
+        _uiState.update { it.copy(endTime = millis, errorMessage = null) }
     }
 
     fun save() {
         val state = _uiState.value
         val entry = state.entry ?: return
+        val validationError = when {
+            state.endTime != null && state.endTime <= state.startTime ->
+                "L'ora di fine deve essere successiva all'inizio."
+            state.startTime > System.currentTimeMillis() ->
+                "L'inizio non può essere nel futuro."
+            else -> null
+        }
+        if (validationError != null) {
+            _uiState.update { it.copy(errorMessage = validationError) }
+            return
+        }
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            updateTimeEntryUseCase(
-                id = entry.id,
-                description = state.description,
-                projectId = state.selectedProjectId,
-                startTime = state.startTime,
-                endTime = state.endTime,
-                clearEndTime = state.endTime == null
-            )
-            _uiState.update { it.copy(isSaving = false, isDone = true) }
+            _uiState.update { it.copy(isSaving = true, errorMessage = null) }
+            try {
+                updateTimeEntryUseCase(
+                    id = entry.id,
+                    description = state.description.trim(),
+                    projectId = state.selectedProjectId,
+                    clearProject = state.selectedProjectId == null,
+                    startTime = state.startTime,
+                    endTime = state.endTime,
+                    clearEndTime = state.endTime == null
+                )
+                _uiState.update { it.copy(isSaving = false, isDone = true) }
+            } catch (error: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        errorMessage = error.message ?: "Salvataggio non riuscito."
+                    )
+                }
+            }
         }
     }
 

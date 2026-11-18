@@ -43,6 +43,10 @@ fun StudyTrackNavGraph(
             ProjectsScreen()
         }
 
+        composable(NavDestination.Settings.route) {
+            SettingsScreen()
+        }
+
         composable(
             route = NavDestination.EditEntry.route,
             arguments = listOf(navArgument("entryId") { type = NavType.LongType })

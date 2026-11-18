@@ -29,8 +29,7 @@ class HistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
-    private val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    private val displaySdf = SimpleDateFormat("EEEE, MMM dd yyyy", Locale.getDefault())
+    private val displaySdf = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
 
     init {
         viewModelScope.launch {
@@ -46,8 +45,15 @@ class HistoryViewModel @Inject constructor(
                 val grouped = filtered
                     .filter { !it.isRunning }
                     .groupBy { entry ->
-                        val date = Date(entry.startTime)
-                        displaySdf.format(date)
+                        val entryDate = java.time.Instant.ofEpochMilli(entry.startTime)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate()
+                        val today = java.time.LocalDate.now()
+                        when (entryDate) {
+                            today -> "Today"
+                            today.minusDays(1) -> "Yesterday"
+                            else -> displaySdf.format(Date(entry.startTime))
+                        }
                     }
                 Triple(grouped, projects, filterProject)
             }.collect { (grouped, projects, _) ->
@@ -67,6 +73,13 @@ class HistoryViewModel @Inject constructor(
     fun deleteEntry(entry: TimeEntryEntity) {
         viewModelScope.launch {
             repository.deleteTimeEntry(entry.id)
+        }
+    }
+
+    /** Restores a deleted entry, preserving its original ID and timestamps. */
+    fun restoreEntry(entry: TimeEntryEntity) {
+        viewModelScope.launch {
+            repository.insertTimeEntry(entry)
         }
     }
 }

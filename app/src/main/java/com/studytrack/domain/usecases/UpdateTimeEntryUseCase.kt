@@ -16,7 +16,8 @@ class UpdateTimeEntryUseCase @Inject constructor(
      * @param endTime     New end time in epoch millis, or null to keep existing
      *                    (pass -1L to explicitly clear endTime / mark as running).
      * @param description New description, or null to keep existing.
-     * @param projectId   New projectId, or use a wrapper; null means "no change".
+     * @param projectId   New projectId when not clearing it.
+     * @param clearProject Set to true to explicitly remove the project association.
      */
     suspend operator fun invoke(
         id: Long,
@@ -24,6 +25,7 @@ class UpdateTimeEntryUseCase @Inject constructor(
         endTime: Long? = null,
         description: String? = null,
         projectId: Long? = null,
+        clearProject: Boolean = false,
         clearEndTime: Boolean = false
     ) {
         val existing = repository.getTimeEntryById(id) ?: return
@@ -38,7 +40,7 @@ class UpdateTimeEntryUseCase @Inject constructor(
             startTime = startTime ?: existing.startTime,
             endTime = newEndTime,
             description = description ?: existing.description,
-            projectId = projectId ?: existing.projectId,
+            projectId = if (clearProject) null else projectId ?: existing.projectId,
             isRunning = newEndTime == null
         )
         repository.updateTimeEntry(updated)

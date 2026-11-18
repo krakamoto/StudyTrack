@@ -9,3 +9,6 @@
 .cxx
 local.properties
 app/build/
+
+# GitHub token locale (mai committare)
+.github-token

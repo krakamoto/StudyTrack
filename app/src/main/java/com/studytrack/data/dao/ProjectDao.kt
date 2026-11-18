@@ -27,4 +27,14 @@ interface ProjectDao {
 
     @Query("SELECT COUNT(*) FROM projects")
     suspend fun getCount(): Int
+
+    /** One-shot snapshot used by backup/export. */
+    @Query("SELECT * FROM projects ORDER BY name ASC")
+    suspend fun getAllProjectsOnce(): List<ProjectEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(projects: List<ProjectEntity>)
+
+    @Query("DELETE FROM projects")
+    suspend fun deleteAll()
 }

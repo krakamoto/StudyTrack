@@ -71,7 +71,11 @@ fun TimerScreen(
         EditTimeEntryDialog(
             entry = entry,
             projects = state.projects,
-            onDismiss = { viewModel.closeEdit() }
+            onDismiss = { viewModel.closeEdit() },
+            onSave = { description, projectId, startTime, endTime ->
+                viewModel.saveEntryEdits(entry, description, projectId, startTime, endTime)
+            },
+            onDelete = { viewModel.deleteEntry(entry) }
         )
     }
 
@@ -153,7 +157,6 @@ fun TimerScreen(
                     label = { Text("What are you studying?") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    enabled = !state.isRunning,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -165,7 +168,7 @@ fun TimerScreen(
                 // Project selector
                 ExposedDropdownMenuBox(
                     expanded = state.showProjectDropdown,
-                    onExpandedChange = { if (!state.isRunning) viewModel.toggleProjectDropdown() }
+                    onExpandedChange = { viewModel.toggleProjectDropdown() }
                 ) {
                     OutlinedTextField(
                         value = state.projectFor(state.selectedProjectId)?.name ?: "No project",
@@ -180,8 +183,7 @@ fun TimerScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
-                        enabled = !state.isRunning
+                            .menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = state.showProjectDropdown,
@@ -220,18 +222,30 @@ fun TimerScreen(
 
                 // Start / Stop FAB
                 FloatingActionButton(
-                    onClick = { if (state.isRunning) viewModel.stop() else viewModel.start() },
+                    onClick = {
+                        if (!state.isSyncing) {
+                            if (state.isRunning) viewModel.stop() else viewModel.start()
+                        }
+                    },
                     containerColor = if (state.isRunning) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(72.dp),
                     shape = CircleShape
                 ) {
-                    Icon(
-                        imageVector = if (state.isRunning) Icons.Filled.Stop else Icons.Filled.PlayArrow,
-                        contentDescription = if (state.isRunning) "Stop" else "Start",
-                        modifier = Modifier.size(36.dp),
-                        tint = Color.White
-                    )
+                    if (state.isSyncing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(28.dp),
+                            color = Color.White,
+                            strokeWidth = 3.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = if (state.isRunning) Icons.Filled.Stop else Icons.Filled.PlayArrow,
+                            contentDescription = if (state.isRunning) "Stop" else "Start",
+                            modifier = Modifier.size(36.dp),
+                            tint = Color.White
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))

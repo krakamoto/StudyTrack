@@ -13,6 +13,7 @@ sealed class NavDestination(
     data object History : NavDestination("history", "History", Icons.Filled.History)
     data object Statistics : NavDestination("statistics", "Statistics", Icons.Filled.BarChart)
     data object Projects : NavDestination("projects", "Projects", Icons.Filled.FolderOpen)
+    data object Settings : NavDestination("settings", "Settings", Icons.Filled.Settings)
 
     data object EditEntry : NavDestination("edit_entry/{entryId}", "Edit Entry", Icons.Filled.Edit) {
         fun route(entryId: Long) = "edit_entry/$entryId"
@@ -23,5 +24,6 @@ val bottomNavDestinations = listOf(
     NavDestination.Timer,
     NavDestination.History,
     NavDestination.Statistics,
-    NavDestination.Projects
+    NavDestination.Projects,
+    NavDestination.Settings
 )

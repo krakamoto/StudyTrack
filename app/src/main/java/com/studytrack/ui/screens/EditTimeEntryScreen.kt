@@ -58,7 +58,9 @@ fun EditTimeEntryScreen(
 fun EditTimeEntryDialog(
     entry: TimeEntryEntity,
     projects: List<ProjectEntity>,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onSave: (description: String, projectId: Long?, startTime: Long, endTime: Long?) -> Unit,
+    onDelete: () -> Unit
 ) {
     // Local state for the dialog
     var description by remember { mutableStateOf(entry.description) }
@@ -68,8 +70,8 @@ fun EditTimeEntryDialog(
     var showProjectDropdown by remember { mutableStateOf(false) }
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
+    var validationError by remember { mutableStateOf<String?>(null) }
 
-    val context = LocalContext.current
     val timeFmt = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
     fun startCal() = Calendar.getInstance().apply { timeInMillis = startTime }
@@ -145,21 +147,48 @@ fun EditTimeEntryDialog(
                     ) {
                         Text("Start: ${timeFmt.format(Date(startTime))}")
                     }
-                    if (endTime != null) {
-                        OutlinedButton(
-                            onClick = { showEndTimePicker = true },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("End: ${timeFmt.format(Date(endTime!!))}")
-                        }
+                    OutlinedButton(
+                        onClick = { showEndTimePicker = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("End: ${endTime?.let { timeFmt.format(Date(it)) } ?: "Running"}")
                     }
+                }
+
+                validationError?.let { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         },
         confirmButton = {
-            Button(onClick = onDismiss) { Text("Close") }
+            Button(
+                onClick = {
+                    val currentEnd = endTime
+                    validationError = when {
+                        currentEnd != null && currentEnd <= startTime ->
+                            "L'ora di fine deve essere successiva all'inizio."
+                        startTime > System.currentTimeMillis() ->
+                            "L'inizio non può essere nel futuro."
+                        else -> null
+                    }
+                    if (validationError == null) {
+                        onSave(description, selectedProjectId, startTime, currentEnd)
+                    }
+                }
+            ) { Text("Salva") }
         },
-        dismissButton = {}
+        dismissButton = {
+            Row {
+                TextButton(onClick = onDelete) {
+                    Text("Elimina", color = MaterialTheme.colorScheme.error)
+                }
+                TextButton(onClick = onDismiss) { Text("Annulla") }
+            }
+        }
     )
 
     if (showStartTimePicker) {
@@ -320,6 +349,14 @@ private fun EditTimeEntryContent(
                 ) {
                     Text("End\n${state.endTime?.let { timeFmt.format(Date(it)) } ?: "Running"}")
                 }
+            }
+
+            state.errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))

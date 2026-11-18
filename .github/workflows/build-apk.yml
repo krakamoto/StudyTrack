@@ -28,7 +28,7 @@ jobs:
           gradle-version: '8.11.1'
 
       - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -40,20 +40,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.1.0
-          name: "StudyTrack v1.1.0 (Toggl Dial Picker & Live Edit)"
+          tag_name: v1.2.0
+          name: "StudyTrack v1.2.0 (Backup, statistiche e UX)"
           body: |
-            ### ⏱️ StudyTrack v1.1.0
+            ### ⏱️ StudyTrack v1.2.0
 
-            Nuove funzionalità:
-            - 🎯 **Modifica orario dal Timer in esecuzione**: tocca direttamente il display centrale del timer attivo per correggere l'ora di inizio in tempo reale.
-            - 🔄 **Selettore a Ghiera Circolare Toggl Track**:
-              - 1 giro completo a 360° = 1 ora esatta (60 minuti).
-              - Ruotando in senso orario oltre le 12 l'ora avanza (+1h), in senso antiorario scala (-1h).
-              - Pulsanti rapidi `[-1h]` e `[+1h]` per modifiche veloci.
-            - 📊 Grafici a barre animati nativi Jetpack Compose con Material 3.
+            Novità:
+            - 💾 **Backup e ripristino JSON** con validazione e conferma prima dell'import.
+            - 📊 **Statistiche corrette**: grafici con giorni/settimane/mesi vuoti, streak reale e medie affidabili.
+            - ✏️ **Timer modificabile mentre è attivo**: descrizione e progetto vengono salvati automaticamente.
+            - ↩️ **Undo dopo l'eliminazione** di una sessione dalla cronologia.
+            - ✅ **Validazione degli orari** e prevenzione dei duplicati nei progetti.
+            - ⚙️ Nuova schermata **Impostazioni** per backup, ripristino ed eliminazione dei dati.
 
-            Scarica il file `app-debug.apk` qui sotto per installarlo direttamente sul tuo smartphone Android!
+            Scarica `app-debug.apk` qui sotto per installarlo sul tuo smartphone Android.
           files: app/build/outputs/apk/debug/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.studytrack.ui.components.TimeEntryCard
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,9 +30,12 @@ fun HistoryScreen(
     onNavigateToEdit: (Long) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -103,7 +107,11 @@ fun HistoryScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "No entries yet.\nStart tracking to see your history.",
+                    if (state.filterProjectId == null) {
+                        "No entries yet.\nStart tracking to see your history."
+                    } else {
+                        "No entries for this project."
+                    },
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -130,6 +138,16 @@ fun HistoryScreen(
                             confirmValueChange = { value ->
                                 if (value == SwipeToDismissBoxValue.EndToStart) {
                                     viewModel.deleteEntry(entry)
+                                    scope.launch {
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "Sessione eliminata",
+                                            actionLabel = "Annulla",
+                                            duration = SnackbarDuration.Short
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            viewModel.restoreEntry(entry)
+                                        }
+                                    }
                                     true
                                 } else false
                             }

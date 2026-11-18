@@ -1,5 +1,7 @@
 # StudyTrack ⏱️📚
 
+**Versione 1.2.0** — app Android offline per monitorare sessioni di studio, con statistiche affidabili e backup portabile.
+
 **StudyTrack** is a Toggl Track-style study time tracker for Android, designed to help students and self-learners track focus sessions, analyze productivity patterns, and stay accountable. Built with 100% Kotlin, Jetpack Compose, Material 3, and Clean Architecture.
 
 ---
@@ -9,7 +11,7 @@
 - **⏱️ Live Ticking Timer**
   - Prominent circular stopwatch with a pulsing ring indicator during active sessions.
   - One-tap Toggl-style floating action button (red when running, gray when stopped).
-  - Inline description entry (*"What are you studying?"*) and quick project tagging.
+  - Description and project remain editable while the timer is running; changes are saved automatically.
   - Automatic safeguard: starting a new timer automatically concludes any previously active session.
 
 - **✏️ Retroactive Time Adjustments (Edit Start & End Times)**
@@ -17,12 +19,12 @@
   - Accessible via full-screen route or quick inline modal dialog (long-press from today's list).
   - Integrated 24-hour time pickers and calendar date dialogs.
 
-- **📊 Comprehensive Statistics & Vico Charts**
-  - **Daily Tab**: Bar chart of hours studied over the past 7 days, today's total, and best study day.
-  - **Weekly Tab**: Bar chart of weekly study hours over the past 8 weeks, current week total, and streak counter.
-  - **Monthly Tab**: Study trends across the past 12 months with daily averages.
-  - **Project Breakdown**: Visual percentage progress bars showing time invested per subject/project.
-  - **Streak & Performance**: Gamified study streaks (days in a row) and productivity averages.
+- **📊 Comprehensive Statistics**
+  - **Daily Tab**: Zero-filled 7-day chart, today's total, 7-day average, and best study day.
+  - **Weekly Tab**: Current week total, streak, and an 8-week trend.
+  - **Monthly Tab**: Current month total, streak, and a 12-month trend.
+  - **Project Breakdown**: Visual percentage progress bars showing time invested per subject/project over the last 30 days.
+  - **Streak & Performance**: Correct streak calculation across the full study history, not just the visible week.
 
 - **📁 Project & Subject Management**
   - Group time entries into subjects/projects (e.g., Mathematics, Machine Learning, History).
@@ -32,8 +34,9 @@
 - **📜 History & Timeline**
   - Chronological history of all completed study sessions grouped by date.
   - Filter history by specific project.
-  - Intuitive swipe-to-delete with background undo feedback.
-  - Tap any past entry to adjust its timestamp or details.
+  - Swipe-to-delete with a Snackbar action to undo the deletion.
+  - Tap any past entry to adjust its description, project, date, and timestamps.
+  - Input validation prevents sessions that end before they start or begin in the future.
 
 - **🌙 Dark Theme**
   - Dark UI crafted with Material 3: Deep Navy (`#1A1A2E`), Crimson Red (`#E50914`), and Night Purple (`#252545`).
@@ -41,6 +44,11 @@
 
 - **🔒 100% Offline & Private**
   - All data is stored locally in Room SQLite database. No account, telemetry, or cloud connection required.
+
+- **💾 Backup e ripristino**
+  - Export a versioned, human-readable JSON backup to any document provider.
+  - Import a backup with a confirmation step and full validation before replacing local data.
+  - Clear all local data from the Settings screen.
 
 ---
 
@@ -52,7 +60,7 @@
 - **Dependency Injection:** [Dagger Hilt 2.54](https://dagger.dev/hilt/) + Hilt Navigation Compose
 - **Local Persistence:** [Room 2.6.1](https://developer.android.com/training/data-storage/room) via KSP
 - **Concurrency & Reactivity:** Kotlin Coroutines & `StateFlow` / `Flow`
-- **Charts:** [Vico 2.0.0-beta.4](https://github.com/patrykandpatrick/vico) (Cartesian charts, column layers)
+- **Charts:** Native Jetpack Compose animated bar charts (no chart library dependency)
 - **Navigation:** Jetpack Navigation Compose with type-safe route parameters
 - **Target SDK:** 35 (Android 15) | **Min SDK:** 26 (Android 8.0 Oreo)
 
@@ -113,16 +121,17 @@ StudyTrack/
 ### Command Line
 ```bash
 # Clone or navigate to the directory
-cd /home/giacomo/ai/StudyTrack
+cd StudyTrack
 
-# Build debug APK
+# Build debug APK (the Gradle wrapper is included)
 ./gradlew assembleDebug
 
 # Install on a connected device/emulator
 ./gradlew installDebug
 
-# Run unit tests
+# Run unit tests and static checks
 ./gradlew testDebugUnitTest
+./gradlew lintDebug
 ```
 
 The resulting debug APK is located at:
@@ -132,7 +141,7 @@ The resulting debug APK is located at:
 
 ## 📱 Screenshots & Mockups
 
-| Timer (Tracking) | History & Swipe Delete | Statistics & Vico Charts |
+| Timer (Tracking) | History & Swipe Delete | Statistics |
 |:---:|:---:|:---:|
 | `[ 01:24:32 ]` <br> *Mathematics* <br> 🔴 `[ STOP ]` | 🗓️ *Monday, Nov 18* <br> 🔹 Machine Learning (2h 15m) <br> 🔸 Algorithms (1h 10m) | 📊 **7-Day Trend** <br> Today: 3h 25m <br> Streak: 5 days 🔥 |
 
@@ -141,6 +150,33 @@ The resulting debug APK is located at:
 | 🕒 *Start: 09:30* <br> 🕒 *End: 11:45* <br> 💾 `[ Save Changes ]` | 🟣 *Deep Learning* <br> 🟢 *Software Engineering* <br> ➕ `[ Add Project ]` |
 
 ---
+
+## 🔐 Token GitHub per push
+
+Il token non va mai scritto nel codice o in un file tracciato da Git. È disponibile un file locale già ignorato:
+
+```bash
+# 1. Apri il file e incolla il PAT
+nano .github-token
+
+# 2. Verifica il diff e crea il commit
+git status
+git add .
+git commit -m "feat: improve StudyTrack"
+
+# 3. Push tramite lo script che legge il token dal file locale
+./scripts/push-with-token.sh main
+```
+
+Il PAT deve avere il permesso minimo **Contents: Read and write** sul repository `krakamoto/StudyTrack`. Il file `.github-token` è presente solo in locale ed è escluso tramite `.gitignore`.
+
+## 🧪 Verifiche rapide
+
+```bash
+./gradlew assembleDebug
+./gradlew testDebugUnitTest
+./gradlew lintDebug
+```
 
 ## 📄 License
 This project is open-source and free to use for personal study tracking and educational development.

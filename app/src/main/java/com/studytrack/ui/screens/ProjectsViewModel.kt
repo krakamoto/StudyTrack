@@ -15,7 +15,8 @@ data class ProjectsUiState(
     val showAddDialog: Boolean = false,
     val editingProject: ProjectEntity? = null,
     val newName: String = "",
-    val newColorHex: String = PROJECT_COLORS.first()
+    val newColorHex: String = PROJECT_COLORS.first(),
+    val nameError: String? = null
 )
 
 @HiltViewModel
@@ -35,19 +36,43 @@ class ProjectsViewModel @Inject constructor(
     }
 
     fun openAddDialog() {
-        _uiState.update { it.copy(showAddDialog = true, editingProject = null, newName = "", newColorHex = PROJECT_COLORS.first()) }
+        _uiState.update {
+            it.copy(
+                showAddDialog = true,
+                editingProject = null,
+                newName = "",
+                newColorHex = PROJECT_COLORS.first(),
+                nameError = null
+            )
+        }
     }
 
     fun openEditDialog(project: ProjectEntity) {
-        _uiState.update { it.copy(showAddDialog = true, editingProject = project, newName = project.name, newColorHex = project.colorHex) }
+        _uiState.update {
+            it.copy(
+                showAddDialog = true,
+                editingProject = project,
+                newName = project.name,
+                newColorHex = project.colorHex,
+                nameError = null
+            )
+        }
     }
 
     fun closeDialog() {
-        _uiState.update { it.copy(showAddDialog = false, editingProject = null, newName = "", newColorHex = PROJECT_COLORS.first()) }
+        _uiState.update {
+            it.copy(
+                showAddDialog = false,
+                editingProject = null,
+                newName = "",
+                newColorHex = PROJECT_COLORS.first(),
+                nameError = null
+            )
+        }
     }
 
     fun onNameChange(value: String) {
-        _uiState.update { it.copy(newName = value) }
+        _uiState.update { it.copy(newName = value, nameError = null) }
     }
 
     fun onColorChange(hex: String) {
@@ -56,15 +81,26 @@ class ProjectsViewModel @Inject constructor(
 
     fun save() {
         val state = _uiState.value
-        if (state.newName.isBlank()) return
+        val name = state.newName.trim()
+        if (name.isBlank()) {
+            _uiState.update { it.copy(nameError = "Inserisci un nome per il progetto.") }
+            return
+        }
+        val duplicate = state.projects.any { project ->
+            project.id != state.editingProject?.id && project.name.equals(name, ignoreCase = true)
+        }
+        if (duplicate) {
+            _uiState.update { it.copy(nameError = "Esiste già un progetto con questo nome.") }
+            return
+        }
         viewModelScope.launch {
             if (state.editingProject != null) {
                 repository.updateProject(
-                    state.editingProject.copy(name = state.newName, colorHex = state.newColorHex)
+                    state.editingProject.copy(name = name, colorHex = state.newColorHex)
                 )
             } else {
                 repository.insertProject(
-                    ProjectEntity(name = state.newName, colorHex = state.newColorHex, createdAt = System.currentTimeMillis())
+                    ProjectEntity(name = name, colorHex = state.newColorHex, createdAt = System.currentTimeMillis())
                 )
             }
             closeDialog()

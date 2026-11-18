@@ -124,4 +124,14 @@ interface TimeEntryDao {
     /** All entries, newest first (for a full history list). */
     @Query("SELECT * FROM time_entries ORDER BY startTime DESC")
     fun getAllEntries(): Flow<List<TimeEntryEntity>>
+
+    /** One-shot snapshot used by backup/export. */
+    @Query("SELECT * FROM time_entries ORDER BY startTime DESC")
+    suspend fun getAllEntriesOnce(): List<TimeEntryEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(entries: List<TimeEntryEntity>)
+
+    @Query("DELETE FROM time_entries")
+    suspend fun deleteAll()
 }

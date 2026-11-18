@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.core.animateFloatAsState
-import com.studytrack.data.dao.DailyTotal
 
 private fun millisToHours(millis: Long): Float = millis / 3_600_000f
 
@@ -82,17 +81,17 @@ fun StatisticsScreen(
                 when (state.selectedTab) {
                     0 -> {
                         StatCard("Today", formatHours(state.totalTodayMillis), Modifier.weight(1f))
+                        StatCard("7-Day Avg", formatHours(state.avgDailyMillis), Modifier.weight(1f))
                         StatCard("Best Day", formatHours(state.bestDayMillis), Modifier.weight(1f))
-                        StatCard("Avg/Day", formatHours(state.avgDailyMillis), Modifier.weight(1f))
                     }
                     1 -> {
                         StatCard("This Week", formatHours(state.totalThisWeekMillis), Modifier.weight(1f))
-                        StatCard("Best Day", formatHours(state.bestDayMillis), Modifier.weight(1f))
                         StatCard("Streak", "${state.streakDays}d 🔥", Modifier.weight(1f))
+                        StatCard("Best Day", formatHours(state.bestDayMillis), Modifier.weight(1f))
                     }
                     2 -> {
+                        StatCard("This Month", formatHours(state.totalThisMonthMillis), Modifier.weight(1f))
                         StatCard("Streak", "${state.streakDays}d 🔥", Modifier.weight(1f))
-                        StatCard("Avg/Day", formatHours(state.avgDailyMillis), Modifier.weight(1f))
                         StatCard("Best Day", formatHours(state.bestDayMillis), Modifier.weight(1f))
                     }
                 }
@@ -182,7 +181,7 @@ private fun StatCard(label: String, value: String, modifier: Modifier = Modifier
 
 @Composable
 private fun BarChartSection(
-    data: List<DailyTotal>,
+    data: List<ChartPoint>,
     accentColor: Color,
     modifier: Modifier = Modifier
 ) {
@@ -250,7 +249,7 @@ private fun BarChartSection(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = item.date.takeLast(5),
+                            text = item.label,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1

@@ -126,7 +126,11 @@ fun ProjectsScreen(
                         onValueChange = viewModel::onNameChange,
                         label = { Text("Project Name") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        isError = state.nameError != null,
+                        supportingText = state.nameError?.let { error ->
+                            { Text(error, color = MaterialTheme.colorScheme.error) }
+                        }
                     )
                     Text("Color", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     ColorPicker(
