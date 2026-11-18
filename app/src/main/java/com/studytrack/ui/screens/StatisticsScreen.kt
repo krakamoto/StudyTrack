@@ -15,14 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import androidx.compose.animation.core.animateFloatAsState
 import com.studytrack.data.dao.DailyTotal
 
 private fun millisToHours(millis: Long): Float = millis / 3_600_000f
@@ -209,36 +202,63 @@ private fun BarChartSection(
         return
     }
 
-    val modelProducer = remember { CartesianChartModelProducer() }
-
-    LaunchedEffect(data) {
-        modelProducer.runTransaction {
-            columnSeries {
-                series(data.map { millisToHours(it.totalMillis) })
-            }
-        }
-    }
+    val maxHours = (data.maxOfOrNull { millisToHours(it.totalMillis) } ?: 1f).coerceAtLeast(1f)
 
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        CartesianChartHost(
-            chart = rememberCartesianChart(
-                rememberColumnCartesianLayer(),
-                startAxis = rememberStartAxis(),
-                bottomAxis = rememberBottomAxis(
-                    valueFormatter = CartesianValueFormatter { _, value, _ ->
-                        data.getOrNull(value.toInt())?.date?.takeLast(5) ?: ""
-                    }
-                )
-            ),
-            modelProducer = modelProducer,
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
                 .padding(16.dp)
-        )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                data.forEach { item ->
+                    val hours = millisToHours(item.totalMillis)
+                    val ratio = (hours / maxHours).coerceIn(0f, 1f)
+                    val animatedRatio by animateFloatAsState(targetValue = ratio, label = "barHeight")
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        if (hours > 0) {
+                            Text(
+                                text = "%.1fh".format(hours),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.6f)
+                                .height((110 * animatedRatio).dp.coerceAtLeast(if (hours > 0) 6.dp else 2.dp))
+                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                .background(if (hours > 0) accentColor else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = item.date.takeLast(5),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

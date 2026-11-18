@@ -19,6 +19,4 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# Vico Charts
--keep class com.patrykandpatrick.vico.** { *; }
--dontwarn com.patrykandpatrick.vico.**
+
