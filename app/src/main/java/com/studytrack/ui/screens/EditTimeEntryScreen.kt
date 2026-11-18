@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.studytrack.data.entities.ProjectEntity
 import com.studytrack.data.entities.TimeEntryEntity
 import com.studytrack.ui.components.TimePickerDialog
+import com.studytrack.ui.components.TogglTimeDialDialog
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -162,34 +163,28 @@ fun EditTimeEntryDialog(
     )
 
     if (showStartTimePicker) {
-        TimePickerDialog(
-            initialHour = startCal().get(Calendar.HOUR_OF_DAY),
-            initialMinute = startCal().get(Calendar.MINUTE),
-            onTimePicked = { h, m ->
-                startTime = startCal().apply {
-                    set(Calendar.HOUR_OF_DAY, h)
-                    set(Calendar.MINUTE, m)
-                    set(Calendar.SECOND, 0)
-                }.timeInMillis
+        TogglTimeDialDialog(
+            initialTimeMillis = startTime,
+            onConfirm = {
+                startTime = it
                 showStartTimePicker = false
             },
-            onDismiss = { showStartTimePicker = false }
+            onDismiss = { showStartTimePicker = false },
+            title = "Modifica Ora Inizio",
+            label = "START TIME"
         )
     }
 
     if (showEndTimePicker && endTime != null) {
-        TimePickerDialog(
-            initialHour = endCal().get(Calendar.HOUR_OF_DAY),
-            initialMinute = endCal().get(Calendar.MINUTE),
-            onTimePicked = { h, m ->
-                endTime = endCal().apply {
-                    set(Calendar.HOUR_OF_DAY, h)
-                    set(Calendar.MINUTE, m)
-                    set(Calendar.SECOND, 0)
-                }.timeInMillis
+        TogglTimeDialDialog(
+            initialTimeMillis = endTime!!,
+            onConfirm = {
+                endTime = it
                 showEndTimePicker = false
             },
-            onDismiss = { showEndTimePicker = false }
+            onDismiss = { showEndTimePicker = false },
+            title = "Modifica Ora Fine",
+            label = "END TIME"
         )
     }
 }
@@ -340,34 +335,30 @@ private fun EditTimeEntryContent(
         }
     }
 
-    // Time pickers
+    // Toggl Circular Time pickers
     if (showStartTimePicker) {
-        TimePickerDialog(
-            initialHour = startCal().get(Calendar.HOUR_OF_DAY),
-            initialMinute = startCal().get(Calendar.MINUTE),
-            onTimePicked = { h, m ->
-                val updated = startCal().apply {
-                    set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m); set(Calendar.SECOND, 0)
-                }.timeInMillis
-                onStartTimeChange(updated)
+        TogglTimeDialDialog(
+            initialTimeMillis = state.startTime,
+            onConfirm = {
+                onStartTimeChange(it)
                 showStartTimePicker = false
             },
-            onDismiss = { showStartTimePicker = false }
+            onDismiss = { showStartTimePicker = false },
+            title = "Modifica Ora Inizio",
+            label = "START TIME"
         )
     }
 
-    if (showEndTimePicker) {
-        TimePickerDialog(
-            initialHour = endCal().get(Calendar.HOUR_OF_DAY),
-            initialMinute = endCal().get(Calendar.MINUTE),
-            onTimePicked = { h, m ->
-                val updated = endCal().apply {
-                    set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m); set(Calendar.SECOND, 0)
-                }.timeInMillis
-                onEndTimeChange(updated)
+    if (showEndTimePicker && state.endTime != null) {
+        TogglTimeDialDialog(
+            initialTimeMillis = state.endTime!!,
+            onConfirm = {
+                onEndTimeChange(it)
                 showEndTimePicker = false
             },
-            onDismiss = { showEndTimePicker = false }
+            onDismiss = { showEndTimePicker = false },
+            title = "Modifica Ora Fine",
+            label = "END TIME"
         )
     }
 

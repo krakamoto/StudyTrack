@@ -20,6 +20,8 @@ data class TimerUiState(
     val selectedProjectId: Long? = null,
     val elapsedMillis: Long = 0L,
     val currentEntryId: Long? = null,
+    val runningStartTime: Long = 0L,
+    val showAdjustRunningStartTime: Boolean = false,
     val recentEntries: List<TimeEntryEntity> = emptyList(),
     val projects: List<ProjectEntity> = emptyList(),
     val showProjectDropdown: Boolean = false,
@@ -67,13 +69,22 @@ class TimerViewModel @Inject constructor(
                             description = entry.description,
                             selectedProjectId = entry.projectId,
                             currentEntryId = entry.id,
-                            elapsedMillis = System.currentTimeMillis() - entry.startTime
+                            runningStartTime = entry.startTime,
+                            elapsedMillis = (System.currentTimeMillis() - entry.startTime).coerceAtLeast(0L)
                         )
                     }
                     startTicking()
                 } else {
                     stopTicking()
-                    _uiState.update { it.copy(isRunning = false, elapsedMillis = 0L, currentEntryId = null) }
+                    _uiState.update {
+                        it.copy(
+                            isRunning = false,
+                            elapsedMillis = 0L,
+                            currentEntryId = null,
+                            runningStartTime = 0L,
+                            showAdjustRunningStartTime = false
+                        )
+                    }
                 }
             }
         }
@@ -144,6 +155,35 @@ class TimerViewModel @Inject constructor(
 
     fun stop() {
         viewModelScope.launch { stopTimerUseCase() }
+    }
+
+    fun openAdjustRunningStartTime() {
+        if (_uiState.value.isRunning && _uiState.value.currentEntryId != null) {
+            _uiState.update { it.copy(showAdjustRunningStartTime = true) }
+        }
+    }
+
+    fun closeAdjustRunningStartTime() {
+        _uiState.update { it.copy(showAdjustRunningStartTime = false) }
+    }
+
+    fun updateRunningStartTime(newStartTimeMillis: Long) {
+        val entryId = _uiState.value.currentEntryId ?: return
+        runningStartTime = newStartTimeMillis
+        val newElapsed = (System.currentTimeMillis() - newStartTimeMillis).coerceAtLeast(0L)
+        _uiState.update {
+            it.copy(
+                runningStartTime = newStartTimeMillis,
+                elapsedMillis = newElapsed,
+                showAdjustRunningStartTime = false
+            )
+        }
+        viewModelScope.launch {
+            val entry = repository.getTimeEntryById(entryId)
+            if (entry != null) {
+                repository.updateTimeEntry(entry.copy(startTime = newStartTimeMillis))
+            }
+        }
     }
 
     fun openEdit(entry: TimeEntryEntity) {

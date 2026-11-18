@@ -40,19 +40,19 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.0
-          name: "StudyTrack v1.0.0 (Debug APK)"
+          tag_name: v1.1.0
+          name: "StudyTrack v1.1.0 (Toggl Dial Picker & Live Edit)"
           body: |
-            ### ⏱️ StudyTrack v1.0.0
-            
-            Prima release dell'app Android **StudyTrack** (Toggl Track per lo studio).
-            
-            - 📱 Compatibile con Android 8.0+ (API 26+)
-            - ⏱️ Timer con controlli in stile Toggl, display circolare e animazione pulsante
-            - ✏️ Modifica retroattiva orari di inizio e fine sessione (Time & Date picker)
-            - 📊 Statistiche con grafici Vico (giornaliero, settimanale, mensile) e metriche avanzate (streak, media)
-            - 📁 Gestione materie con palette colori
-            
+            ### ⏱️ StudyTrack v1.1.0
+
+            Nuove funzionalità:
+            - 🎯 **Modifica orario dal Timer in esecuzione**: tocca direttamente il display centrale del timer attivo per correggere l'ora di inizio in tempo reale.
+            - 🔄 **Selettore a Ghiera Circolare Toggl Track**:
+              - 1 giro completo a 360° = 1 ora esatta (60 minuti).
+              - Ruotando in senso orario oltre le 12 l'ora avanza (+1h), in senso antiorario scala (-1h).
+              - Pulsanti rapidi `[-1h]` e `[+1h]` per modifiche veloci.
+            - 📊 Grafici a barre animati nativi Jetpack Compose con Material 3.
+
             Scarica il file `app-debug.apk` qui sotto per installarlo direttamente sul tuo smartphone Android!
           files: app/build/outputs/apk/debug/*.apk
         env:

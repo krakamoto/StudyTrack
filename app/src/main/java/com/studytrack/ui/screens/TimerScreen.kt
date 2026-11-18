@@ -3,6 +3,7 @@ package com.studytrack.ui.screens
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
@@ -28,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.studytrack.ui.components.TimeEntryCard
 import com.studytrack.ui.components.TimerDisplay
+import com.studytrack.ui.components.TogglTimeDialDialog
 import com.studytrack.ui.components.formatDuration
 import java.text.SimpleDateFormat
 import java.util.*
@@ -51,6 +54,17 @@ fun TimerScreen(
         ),
         label = "ringScale"
     )
+
+    // Show live adjust running start time dialog
+    if (state.showAdjustRunningStartTime) {
+        TogglTimeDialDialog(
+            initialTimeMillis = state.runningStartTime,
+            onConfirm = { viewModel.updateRunningStartTime(it) },
+            onDismiss = { viewModel.closeAdjustRunningStartTime() },
+            title = "Modifica Ora Inizio Timer",
+            label = "START TIME"
+        )
+    }
 
     // Show edit dialog if entry is selected
     state.entryToEdit?.let { entry ->
@@ -90,14 +104,43 @@ fun TimerScreen(
                         modifier = Modifier
                             .size(200.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface),
+                            .background(MaterialTheme.colorScheme.surface)
+                            .clickable(enabled = state.isRunning) {
+                                viewModel.openAdjustRunningStartTime()
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        TimerDisplay(
-                            timeText = state.elapsedDisplay,
-                            isRunning = state.isRunning,
-                            fontSize = 36.sp
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            TimerDisplay(
+                                timeText = state.elapsedDisplay,
+                                isRunning = state.isRunning,
+                                fontSize = 36.sp
+                            )
+                            if (state.isRunning) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit start time",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Tocca per modificare inizio",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
