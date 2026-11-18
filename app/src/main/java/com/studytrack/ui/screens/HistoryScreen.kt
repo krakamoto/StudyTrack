@@ -42,15 +42,11 @@ fun HistoryScreen(
                     Text("History", fontWeight = FontWeight.Bold)
                 },
                 actions = {
-                    // Filter by project
-                    ExposedDropdownMenuBox(
-                        expanded = state.showFilterDropdown,
-                        onExpandedChange = { viewModel.toggleFilterDropdown() }
-                    ) {
-                        IconButton(
-                            onClick = viewModel::toggleFilterDropdown,
-                            modifier = Modifier.menuAnchor()
-                        ) {
+                    // Filter by project. A plain DropdownMenu is used here:
+                    // pairing an IconButton with ExposedDropdownMenuBox caused
+                    // the anchor and the button to toggle the menu twice.
+                    Box {
+                        IconButton(onClick = viewModel::toggleFilterDropdown) {
                             Icon(
                                 Icons.Filled.FilterList,
                                 "Filter",
@@ -60,7 +56,7 @@ fun HistoryScreen(
                                     MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        ExposedDropdownMenu(
+                        DropdownMenu(
                             expanded = state.showFilterDropdown,
                             onDismissRequest = viewModel::toggleFilterDropdown
                         ) {
