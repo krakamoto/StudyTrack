@@ -27,6 +27,17 @@ data class WeekdayPoint(
     val totalMillis: Long
 )
 
+data class DailyGoalPoint(
+    val label: String,
+    val date: LocalDate,
+    val totalMillis: Long,
+    val goalMillis: Long,
+    val achieved: Boolean
+) {
+    val progress: Float
+        get() = (totalMillis.toFloat() / goalMillis.coerceAtLeast(1L)).coerceIn(0f, 1f)
+}
+
 data class ProjectDuration(
     val projectId: Long?,
     val totalMillis: Long
@@ -45,6 +56,7 @@ data class ProductivityAnalytics(
     val last14Days: List<TrendPoint> = emptyList(),
     val hourlyTotals: List<HourlyPoint> = emptyList(),
     val weekdayTotals: List<WeekdayPoint> = emptyList(),
+    val dailyGoalProgress: List<DailyGoalPoint> = emptyList(),
     val projectTotals: List<ProjectDuration> = emptyList(),
     val totalTodayMillis: Long = 0L,
     val totalThisWeekMillis: Long = 0L,
@@ -53,6 +65,10 @@ data class ProductivityAnalytics(
     val avgSessionMillis: Long = 0L,
     val activeDaysLast7Days: Int = 0,
     val consistencyPercent: Int = 0,
+    val dailyGoalMinutes: Int = 120,
+    val goalCompletionPercent: Int = 0,
+    val goalMetDaysLast7Days: Int = 0,
+    val goalStreakDays: Int = 0,
     val trendPercent: Int? = null,
     val peakHour: Int? = null,
     val peakHourMillis: Long = 0L,

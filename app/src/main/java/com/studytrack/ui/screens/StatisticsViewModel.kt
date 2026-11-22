@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studytrack.data.entities.ProjectEntity
 import com.studytrack.data.repository.StudyTrackRepository
+import com.studytrack.data.settings.SettingsRepository
 import com.studytrack.domain.usecases.CalculateProductivityUseCase
 import com.studytrack.domain.usecases.ProductivityAnalytics
 import com.studytrack.domain.usecases.StudySession
@@ -28,6 +29,7 @@ data class StatisticsUiState(
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     private val repository: StudyTrackRepository,
+    private val settingsRepository: SettingsRepository,
     private val calculateProductivity: CalculateProductivityUseCase
 ) : ViewModel() {
 
@@ -38,9 +40,12 @@ class StatisticsViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 repository.getAllEntries(),
-                repository.getAllProjects()
-            ) { entries, projects -> entries to projects }
-                .collect { (entries, projects) ->
+                repository.getAllProjects(),
+                settingsRepository.dailyGoalMinutes
+            ) { entries, projects, dailyGoalMinutes ->
+                Triple(entries, projects, dailyGoalMinutes)
+            }
+                .collect { (entries, projects, dailyGoalMinutes) ->
                     val sessions = entries
                         .filter { !it.isRunning && it.endTime != null }
                         .map { entry ->
@@ -50,7 +55,10 @@ class StatisticsViewModel @Inject constructor(
                                 projectId = entry.projectId
                             )
                         }
-                    val analytics = calculateProductivity(sessions)
+                    val analytics = calculateProductivity(
+                        sessions = sessions,
+                        dailyGoalMinutes = dailyGoalMinutes
+                    )
                     _uiState.update { current ->
                         current.copy(analytics = analytics, projects = projects)
                     }

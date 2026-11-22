@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.studytrack.domain.usecases.ChartPoint
+import com.studytrack.domain.usecases.DailyGoalPoint
 import com.studytrack.domain.usecases.HourlyPoint
 import com.studytrack.domain.usecases.ProductivityAnalytics
 import com.studytrack.domain.usecases.WeekdayPoint
@@ -54,6 +55,16 @@ private fun formatDuration(millis: Long): String {
         hours > 0 -> "${hours}h ${minutes}m"
         minutes > 0 -> "${minutes}m"
         else -> "0m"
+    }
+}
+
+private fun formatGoalMinutes(minutes: Int): String {
+    val hours = minutes / 60
+    val remaining = minutes % 60
+    return when {
+        hours == 0 -> "${remaining}m"
+        remaining == 0 -> "${hours}h"
+        else -> "${hours}h ${remaining}m"
     }
 }
 
@@ -186,6 +197,11 @@ fun StatisticsScreen(
                 projectName = state.projectName(analytics.topProjectId) ?: "Nessun progetto",
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            ResearchTipsCard(modifier = Modifier.padding(horizontal = 16.dp))
         }
 
         item {
@@ -345,23 +361,39 @@ private fun FocusScoreCard(
                     TrendBadge(analytics.trendPercent)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "${analytics.activeDaysLast7Days}/7 giorni attivi · " +
-                            "${analytics.consistencyPercent}% costanza",
+                        text = "Obiettivo: ${formatGoalMinutes(analytics.dailyGoalMinutes)}/giorno",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "${analytics.goalCompletionPercent}% dell'obiettivo settimanale · " +
+                            "${analytics.goalMetDaysLast7Days}/7 giorni completi",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Streak attuale: ${analytics.streakDays} " +
-                            if (analytics.streakDays == 1) "giorno" else "giorni",
+                        text = "Streak obiettivo: ${analytics.goalStreakDays} " +
+                            if (analytics.goalStreakDays == 1) "giorno" else "giorni",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = "Il punteggio combina costanza, tempo studiato, durata media " +
-                    "delle sessioni e streak.",
+                text = "COMPLETAMENTO OBIETTIVO · ULTIMI 7 GIORNI",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            DailyGoalProgressStrip(analytics.dailyGoalProgress)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Il punteggio premia le ore effettive: il 50% dipende dal " +
+                    "completamento dell'obiettivo giornaliero, il 30% dalla durata media " +
+                    "delle sessioni e il 20% dalla streak obiettivo.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -379,31 +411,28 @@ private fun FocusScoreCard(
                             "sul rendimento, ma un modo per rendere visibili abitudini e costanza."
                     )
                     FocusCriterion(
-                        points = "40 punti",
-                        title = "Costanza",
-                        detail = "Giorni con almeno una sessione negli ultimi 7, " +
-                            "rapportati a 7 giorni."
+                        points = "50 punti",
+                        title = "Completamento obiettivo",
+                        detail = "Per ognuno degli ultimi 7 giorni viene calcolato " +
+                            "tempo studiato / obiettivo giornaliero, con credito parziale. " +
+                            "Una giornata da 1h su un obiettivo di 2h vale metà di una giornata piena."
                     )
                     FocusCriterion(
                         points = "30 punti",
-                        title = "Volume di studio",
-                        detail = "Media giornaliera degli ultimi 7 giorni rispetto " +
-                            "a un obiettivo di 2 ore al giorno."
-                    )
-                    FocusCriterion(
-                        points = "20 punti",
                         title = "Qualità della sessione",
                         detail = "Durata media delle sessioni degli ultimi 7 giorni " +
                             "rispetto a 45 minuti."
                     )
                     FocusCriterion(
-                        points = "10 punti",
-                        title = "Streak",
-                        detail = "Giorni consecutivi di studio rispetto a una settimana."
+                        points = "20 punti",
+                        title = "Streak obiettivo",
+                        detail = "Giorni consecutivi in cui l'obiettivo giornaliero " +
+                            "è stato raggiunto, rapportati a una settimana."
                     )
                     Text(
-                        text = "I quattro contributi vengono sommati e arrotondati al numero " +
-                            "intero più vicino.",
+                        text = "I contributi vengono sommati e arrotondati al numero intero " +
+                            "più vicino. Non basta registrare pochi minuti: più ore completi, " +
+                            "maggiore sarà il punteggio.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1000,18 +1029,22 @@ private fun InsightCard(
         !analytics.hasData ->
             "Inizia a registrare le tue sessioni: dopo qualche giorno vedrai qui " +
                 "i tuoi pattern di produttività."
+        analytics.goalCompletionPercent < 35 ->
+            "Hai completato il ${analytics.goalCompletionPercent}% del tuo obiettivo " +
+                "settimanale. Prova a distribuire lo studio su più giorni: la pratica " +
+                "distribuita è più efficace dello studio concentrato in un solo giorno."
         analytics.trendPercent != null && analytics.trendPercent <= -15 ->
             "Il tempo studiato è calato rispetto alla settimana precedente. " +
-                "Prova a pianificare una sessione breve ma costante."
-        analytics.consistencyPercent < 50 ->
-            "La costanza è il fattore più importante: punta a studiare anche solo " +
-                "20 minuti in più giorni alla settimana."
+                "Pianifica una sessione breve ma specifica nei prossimi giorni."
         analytics.avgSessionMillis in 1..(20 * 60_000L) ->
-            "Le sessioni sono piuttosto brevi. Prova blocchi da 25–45 minuti " +
-                "per aumentare la concentrazione."
+            "Le sessioni sono piuttosto brevi. Prova blocchi focalizzati da 25–45 minuti " +
+                "seguiti da una pausa di 5–10 minuti."
+        analytics.goalStreakDays >= 5 ->
+            "Ottima costanza: hai raggiunto l'obiettivo per ${analytics.goalStreakDays} " +
+                "giorni consecutivi. Mantieni la routine e proteggi le ore più produttive."
         analytics.focusScore >= 75 ->
-            "Ottimo ritmo! Mantieni la routine attuale e proteggi le ore in cui " +
-                "sei più produttivo."
+            "Ottimo ritmo! Mantieni la routine attuale e continua a rispettare " +
+                "il tuo obiettivo giornaliero."
         else ->
             "Continua così: costanza e sessioni regolari stanno costruendo " +
                 "il tuo andamento."
@@ -1055,6 +1088,122 @@ private fun InsightCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun DailyGoalProgressStrip(points: List<DailyGoalPoint>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(58.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        points.forEach { point ->
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(0.66f)
+                        .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    if (point.totalMillis > 0L) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(point.progress.coerceAtLeast(0.05f))
+                                .background(
+                                    if (point.achieved) PositiveGreen
+                                    else MaterialTheme.colorScheme.primary
+                                )
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = point.label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResearchTipsCard(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "STRATEGIE BASATE SULLA RICERCA",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            ResearchTip(
+                title = "Blocchi focalizzati con pause",
+                detail = "Lavora per 25–50 minuti e fai 5–10 minuti di pausa. " +
+                    "Le pause strutturate riducono la fatica mentale e mantengono l'attenzione."
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            ResearchTip(
+                title = "Poco, ma più giorni",
+                detail = "Distribuire lo studio su più sessioni favorisce il ricordo " +
+                    "a lungo termine rispetto allo studio concentrato in un solo giorno."
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            ResearchTip(
+                title = "Un obiettivo specifico",
+                detail = "Obiettivi chiari e misurabili come le ore giornaliere migliorano " +
+                    "la performance più di un generico «dare il massimo»."
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Suggerimenti sintetizzati da ricerca su goal setting, pratica " +
+                    "distribuita e tecniche di studio con pause.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun ResearchTip(title: String, detail: String) {
+    Row(verticalAlignment = Alignment.Top) {
+        Box(
+            modifier = Modifier
+                .padding(top = 5.dp)
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

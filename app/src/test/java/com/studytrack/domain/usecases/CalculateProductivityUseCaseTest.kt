@@ -79,6 +79,78 @@ class CalculateProductivityUseCaseTest {
     }
 
     @Test
+    fun `more hours per day increase the focus score`() {
+        val shortSessions = (0..6).map { offset ->
+            session(today.minusDays(offset.toLong()), 9, 0, 9, 15)
+        }
+        val longSessions = (0..6).map { offset ->
+            session(today.minusDays(offset.toLong()), 9, 0, 10, 0)
+        }
+
+        val short = calculator(
+            sessions = shortSessions,
+            dailyGoalMinutes = 120,
+            today = today,
+            zone = zone,
+            locale = Locale.US
+        )
+        val long = calculator(
+            sessions = longSessions,
+            dailyGoalMinutes = 120,
+            today = today,
+            zone = zone,
+            locale = Locale.US
+        )
+
+        assertTrue(long.focusScore > short.focusScore)
+        assertTrue(long.goalCompletionPercent > short.goalCompletionPercent)
+    }
+
+    @Test
+    fun `counts partial goal progress and goal streak`() {
+        val analytics = calculator(
+            sessions = listOf(
+                session(today, 9, 0, 10, 0),
+                session(today.minusDays(1), 9, 0, 10, 0),
+                session(today.minusDays(2), 9, 0, 9, 30)
+            ),
+            dailyGoalMinutes = 60,
+            today = today,
+            zone = zone,
+            locale = Locale.US
+        )
+
+        assertEquals(7, analytics.dailyGoalProgress.size)
+        assertEquals(2, analytics.goalMetDaysLast7Days)
+        assertEquals(2, analytics.goalStreakDays)
+        assertEquals(36, analytics.goalCompletionPercent)
+    }
+
+    @Test
+    fun `custom daily goal changes the score`() {
+        val sessions = (0..6).map { offset ->
+            session(today.minusDays(offset.toLong()), 9, 0, 10, 0)
+        }
+        val oneHourGoal = calculator(
+            sessions = sessions,
+            dailyGoalMinutes = 60,
+            today = today,
+            zone = zone,
+            locale = Locale.US
+        )
+        val twoHourGoal = calculator(
+            sessions = sessions,
+            dailyGoalMinutes = 120,
+            today = today,
+            zone = zone,
+            locale = Locale.US
+        )
+
+        assertEquals(100, oneHourGoal.focusScore)
+        assertTrue(twoHourGoal.focusScore < oneHourGoal.focusScore)
+    }
+
+    @Test
     fun `reaches full focus score with seven consistent two hour days`() {
         val sessions = (0..6).map { offset ->
             session(today.minusDays(offset.toLong()), 9, 0, 11, 0)

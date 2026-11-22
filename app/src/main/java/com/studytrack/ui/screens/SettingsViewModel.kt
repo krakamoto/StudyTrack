@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.studytrack.data.backup.BackupPreview
 import com.studytrack.data.backup.BackupRepository
 import com.studytrack.data.backup.StudyTrackBackup
+import com.studytrack.data.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,7 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val isBusy: Boolean = false,
+    val dailyGoalMinutes: Int = SettingsRepository.DEFAULT_DAILY_GOAL_MINUTES,
     val message: String? = null,
     val pendingImport: StudyTrackBackup? = null,
     val pendingImportPreview: BackupPreview? = null,
@@ -29,11 +31,26 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val backupRepository: BackupRepository
+    private val backupRepository: BackupRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            settingsRepository.dailyGoalMinutes.collect { minutes ->
+                _uiState.update { it.copy(dailyGoalMinutes = minutes) }
+            }
+        }
+    }
+
+    fun setDailyGoalMinutes(minutes: Int) {
+        viewModelScope.launch {
+            settingsRepository.setDailyGoalMinutes(minutes)
+        }
+    }
 
     fun exportTo(uri: Uri) {
         viewModelScope.launch {

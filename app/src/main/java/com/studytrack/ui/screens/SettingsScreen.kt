@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,9 +20,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.studytrack.BuildConfig
+import com.studytrack.data.settings.SettingsRepository
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +33,9 @@ fun SettingsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var sliderGoalMinutes by remember(state.dailyGoalMinutes) {
+        mutableFloatStateOf(state.dailyGoalMinutes.toFloat())
+    }
 
     LaunchedEffect(state.message) {
         state.message?.let {
@@ -69,6 +75,77 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
+                SettingsSectionTitle("OBIETTIVO DI STUDIO")
+            }
+            item {
+                SettingsCard(
+                    icon = { Icon(Icons.Filled.Flag, contentDescription = null) },
+                    title = "Ore di studio al giorno",
+                    description = "L'obiettivo personalizza Focus Score, costanza e streak giornaliera."
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Obiettivo attuale: ${formatGoal(state.dailyGoalMinutes)} al giorno",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Medium
+                        )
+                        GoalOptionRow(
+                            options = SettingsRepository.QUICK_GOAL_OPTIONS.take(3),
+                            selectedMinutes = state.dailyGoalMinutes,
+                            onSelect = viewModel::setDailyGoalMinutes
+                        )
+                        GoalOptionRow(
+                            options = SettingsRepository.QUICK_GOAL_OPTIONS.drop(3),
+                            selectedMinutes = state.dailyGoalMinutes,
+                            onSelect = viewModel::setDailyGoalMinutes
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Personalizzato",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = formatGoal(sliderGoalMinutes.roundToInt()),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Slider(
+                            value = sliderGoalMinutes,
+                            onValueChange = { sliderGoalMinutes = it },
+                            valueRange = 15f..480f,
+                            steps = 30,
+                            onValueChangeFinished = {
+                                viewModel.setDailyGoalMinutes(sliderGoalMinutes.roundToInt())
+                            }
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "15 min",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "8 ore",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
                 SettingsSectionTitle("BACKUP E RIPRISTINO")
             }
             item {
@@ -203,6 +280,41 @@ fun SettingsScreen(
         ) {
             CircularProgressIndicator()
         }
+    }
+}
+
+@Composable
+private fun GoalOptionRow(
+    options: List<Int>,
+    selectedMinutes: Int,
+    onSelect: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        options.forEach { minutes ->
+            FilterChip(
+                selected = selectedMinutes == minutes,
+                onClick = { onSelect(minutes) },
+                label = {
+                    Text(
+                        text = formatGoal(minutes),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            )
+        }
+    }
+}
+
+private fun formatGoal(minutes: Int): String {
+    val hours = minutes / 60
+    val remaining = minutes % 60
+    return when {
+        hours == 0 -> "${remaining}m"
+        remaining == 0 -> "${hours}h"
+        else -> "${hours}h ${remaining}m"
     }
 }
 

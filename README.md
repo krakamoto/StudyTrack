@@ -1,6 +1,6 @@
 # StudyTrack ⏱️📚
 
-**Versione 1.4.0** — app Android offline per monitorare sessioni di studio, con notifica del timer, analisi della produttività, trend temporali e backup portabile.
+**Versione 1.5.0** — app Android offline per monitorare sessioni di studio, con notifica del timer, obiettivo giornaliero personalizzabile, analisi della produttività e backup portabile.
 
 **StudyTrack** is a Toggl Track-style study time tracker for Android, designed to help students and self-learners track focus sessions, analyze productivity patterns, and stay accountable. Built with 100% Kotlin, Jetpack Compose, Material 3, and Clean Architecture.
 
@@ -21,14 +21,17 @@
   - Integrated 24-hour time pickers and calendar date dialogs.
 
 - **📊 Comprehensive Statistics & Productivity Analytics**
-  - **Focus Score**: A 0–100 indicator combining consistency, study volume, average session length, and streak.
+  - **Configurable Daily Goal**: Choose a daily study target from 30 minutes to 4 hours; it drives Focus Score, consistency, and goal streaks.
+  - **Weighted Focus Score**: Partial hours count proportionally toward the daily goal, rewarding actual study volume rather than merely opening a session.
+  - **7-Day Goal Progress**: A compact bar strip shows which days met the daily target and how close other days came.
   - **Week-over-week Trend**: Compares the last 7 days with the previous 7 and highlights improvements or declines.
   - **14-Day Momentum Chart**: Daily study time plus a 7-day moving average, rendered with native Compose Canvas.
   - **When You Study**: Hour-of-day and weekday distributions, peak productive hour, and best weekday across the last 30 days.
   - **Daily / Weekly / Monthly Tabs**: Zero-filled charts for the last 7 days, 8 weeks, and 12 months.
   - **Project Breakdown**: Visual percentage progress bars showing time invested per subject/project over the last 30 days.
   - **Useful KPIs**: Today, current week, number of sessions, average session duration, active days, consistency, and longest session.
-  - **Contextual Insight**: A short recommendation based on trend, consistency, focus score, and session length.
+  - **Contextual Insight**: A short recommendation based on goal completion, trend, consistency, focus score, and session length.
+  - **Research-backed Tips**: Focus blocks with breaks, distributed practice, and specific measurable goals.
   - Sessions crossing midnight or hour boundaries are split accurately across all statistics.
 
 - **📁 Project & Subject Management**

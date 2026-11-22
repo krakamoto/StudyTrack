@@ -24,6 +24,7 @@ class CalculateProductivityUseCase @Inject constructor() {
 
     operator fun invoke(
         sessions: List<StudySession>,
+        dailyGoalMinutes: Int = DEFAULT_DAILY_GOAL_MINUTES,
         today: LocalDate = LocalDate.now(),
         zone: ZoneId = ZoneId.systemDefault(),
         locale: Locale = Locale.getDefault()
@@ -65,10 +66,22 @@ class CalculateProductivityUseCase @Inject constructor() {
         val weekFields = WeekFields.ISO
 
         val last7Days = (6 downTo 0).map { today.minusDays(it.toLong()) }
+        val safeGoalMinutes = dailyGoalMinutes.coerceAtLeast(15)
+        val goalMillis = safeGoalMinutes * 60_000L
         val daily = last7Days.map { day ->
             ChartPoint(
                 label = day.format(dayFormatter),
                 totalMillis = byDate[day] ?: 0L
+            )
+        }
+        val dailyGoalProgress = last7Days.map { day ->
+            val millis = byDate[day] ?: 0L
+            DailyGoalPoint(
+                label = day.format(dayFormatter),
+                date = day,
+                totalMillis = millis,
+                goalMillis = goalMillis,
+                achieved = millis >= goalMillis
             )
         }
 
@@ -122,16 +135,19 @@ class CalculateProductivityUseCase @Inject constructor() {
         val avgSessionMillis = if (sessionsLast7.isEmpty()) 0L else {
             sessionsLast7.sumOf { it.endTime - it.startTime } / sessionsLast7.size
         }
-        val avgDailyMillis = totalLast7 / 7L
         val streak = computeStreak(byDate.keys, today)
+        val goalStreak = computeGoalStreak(byDate, goalMillis, today)
+        val goalMetDays = dailyGoalProgress.count { it.achieved }
+        val goalCompletion = dailyGoalProgress.sumOf { point ->
+            (point.totalMillis.toDouble() / goalMillis).coerceIn(0.0, 1.0)
+        } / 7.0
 
-        // 40% consistency, 30% volume vs. a 2h/day target, 20% session
-        // quality vs. 45 minutes, 10% streak.
-        val consistencyScore = activeDays / 7f * 40f
-        val volumeScore = (avgDailyMillis / (2 * 3_600_000f)).coerceIn(0f, 1f) * 30f
-        val sessionScore = (avgSessionMillis / (45 * 60_000f)).coerceIn(0f, 1f) * 20f
-        val streakScore = (streak / 7f).coerceIn(0f, 1f) * 10f
-        val focusScore = (consistencyScore + volumeScore + sessionScore + streakScore)
+        // 50% weighted daily-goal completion (partial hours count), 30%
+        // session quality vs. 45 minutes, 20% consecutive goal-hit streak.
+        val consistencyScore = goalCompletion.toFloat() * 50f
+        val sessionScore = (avgSessionMillis / (45 * 60_000f)).coerceIn(0f, 1f) * 30f
+        val goalStreakScore = (goalStreak / 7f).coerceIn(0f, 1f) * 20f
+        val focusScore = (consistencyScore + sessionScore + goalStreakScore)
             .roundToInt()
             .coerceIn(0, 100)
 
@@ -173,6 +189,7 @@ class CalculateProductivityUseCase @Inject constructor() {
             last14Days = last14Days,
             hourlyTotals = hourlyTotals,
             weekdayTotals = weekdayTotals,
+            dailyGoalProgress = dailyGoalProgress,
             projectTotals = projectTotals,
             totalTodayMillis = byDate[today] ?: 0L,
             totalThisWeekMillis = millisBetween(currentWeekStart, today, byDate),
@@ -181,6 +198,10 @@ class CalculateProductivityUseCase @Inject constructor() {
             avgSessionMillis = avgSessionMillis,
             activeDaysLast7Days = activeDays,
             consistencyPercent = (activeDays / 7f * 100f).roundToInt(),
+            dailyGoalMinutes = safeGoalMinutes,
+            goalCompletionPercent = (goalCompletion * 100.0).roundToInt().coerceIn(0, 100),
+            goalMetDaysLast7Days = goalMetDays,
+            goalStreakDays = goalStreak,
             trendPercent = trendPercent,
             peakHour = peakHourPoint?.hour,
             peakHourMillis = peakHourPoint?.totalMillis ?: 0L,
@@ -210,6 +231,24 @@ class CalculateProductivityUseCase @Inject constructor() {
         return total
     }
 
+    private fun computeGoalStreak(
+        byDate: Map<LocalDate, Long>,
+        goalMillis: Long,
+        today: LocalDate
+    ): Int {
+        var cursor = when {
+            (byDate[today] ?: 0L) >= goalMillis -> today
+            (byDate[today.minusDays(1)] ?: 0L) >= goalMillis -> today.minusDays(1)
+            else -> return 0
+        }
+        var streak = 0
+        while ((byDate[cursor] ?: 0L) >= goalMillis) {
+            streak++
+            cursor = cursor.minusDays(1)
+        }
+        return streak
+    }
+
     private fun computeStreak(studiedDays: Set<LocalDate>, today: LocalDate): Int {
         var cursor = when {
             today in studiedDays -> today
@@ -222,5 +261,9 @@ class CalculateProductivityUseCase @Inject constructor() {
             cursor = cursor.minusDays(1)
         }
         return streak
+    }
+
+    companion object {
+        const val DEFAULT_DAILY_GOAL_MINUTES = 120
     }
 }

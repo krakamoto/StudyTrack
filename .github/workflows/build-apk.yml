@@ -40,17 +40,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.4.0
-          name: "StudyTrack v1.4.0 (Timer Notifications)"
+          tag_name: v1.5.0
+          name: "StudyTrack v1.5.0 (Daily Goal & Productivity Research)"
           body: |
-            ### ⏱️ StudyTrack v1.4.0 — Timer Notifications
+            ### ⏱️ StudyTrack v1.5.0 — Daily Goal & Productivity Research
 
             Novità:
-            - 🔔 **Notifica persistente del timer** con cronometro live quando una sessione è attiva.
-            - ⏹️ Azione **Ferma** direttamente dalla notifica.
-            - 📱 Apertura rapida dell'app toccando la notifica.
-            - ✅ Gestione del permesso notifiche su Android 13+.
-            - ℹ️ Dialog informativo nel Focus Score con criteri e pesi del calcolo.
+            - 🎯 **Obiettivo giornaliero configurabile** da 30 minuti a 4 ore.
+            - 📊 **Focus Score ponderato sulle ore**: il 50% dipende dal completamento
+              dell'obiettivo, con credito parziale per ogni ora studiata.
+            - 🔥 **Streak obiettivo**: giorni consecutivi in cui il target viene raggiunto.
+            - 📈 **Grafico 7 giorni** del completamento dell'obiettivo giornaliero.
+            - 🧠 **Consigli basati sulla ricerca**: blocchi focalizzati, pause,
+              pratica distribuita e goal setting specifico.
+            - 🔔 Notifiche del timer con cronometro live e azione Ferma.
 
             Scarica `app-debug.apk` qui sotto per installarlo sul tuo smartphone Android.
           files: app/build/outputs/apk/debug/*.apk
