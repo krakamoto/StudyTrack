@@ -1,5 +1,6 @@
 package com.studytrack.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studytrack.data.entities.ProjectEntity
@@ -7,7 +8,9 @@ import com.studytrack.data.entities.TimeEntryEntity
 import com.studytrack.data.repository.StudyTrackRepository
 import com.studytrack.domain.usecases.StartTimerUseCase
 import com.studytrack.domain.usecases.StopTimerUseCase
+import com.studytrack.notifications.TimerNotificationService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -42,6 +45,7 @@ data class TimerUiState(
 
 @HiltViewModel
 class TimerViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val repository: StudyTrackRepository,
     private val startTimerUseCase: StartTimerUseCase,
     private val stopTimerUseCase: StopTimerUseCase
@@ -64,6 +68,7 @@ class TimerViewModel @Inject constructor(
         viewModelScope.launch {
             repository.getCurrentRunningEntry().collect { entry ->
                 if (entry != null) {
+                    updateTimerNotification(running = true)
                     runningStartTime = entry.startTime
                     _uiState.update {
                         it.copy(
@@ -77,6 +82,7 @@ class TimerViewModel @Inject constructor(
                     }
                     startTicking()
                 } else {
+                    updateTimerNotification(running = false)
                     stopTicking()
                     _uiState.update {
                         it.copy(
@@ -115,6 +121,18 @@ class TimerViewModel @Inject constructor(
                 _uiState.update { state ->
                     state.copy(recentEntries = entries.filter { !it.isRunning }.take(5))
                 }
+            }
+        }
+    }
+
+    private fun updateTimerNotification(running: Boolean) {
+        // Starting/stopping a foreground service can be rejected by the OS in
+        // unusual background states; the timer must keep working regardless.
+        runCatching {
+            if (running) {
+                TimerNotificationService.start(appContext)
+            } else {
+                TimerNotificationService.stop(appContext)
             }
         }
     }

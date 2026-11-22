@@ -1,6 +1,6 @@
 # StudyTrack ⏱️📚
 
-**Versione 1.3.0** — app Android offline per monitorare sessioni di studio, con analisi della produttività, trend temporali e backup portabile.
+**Versione 1.4.0** — app Android offline per monitorare sessioni di studio, con notifica del timer, analisi della produttività, trend temporali e backup portabile.
 
 **StudyTrack** is a Toggl Track-style study time tracker for Android, designed to help students and self-learners track focus sessions, analyze productivity patterns, and stay accountable. Built with 100% Kotlin, Jetpack Compose, Material 3, and Clean Architecture.
 
@@ -12,6 +12,7 @@
   - Prominent circular stopwatch with a pulsing ring indicator during active sessions.
   - One-tap Toggl-style floating action button (red when running, gray when stopped).
   - Description and project remain editable while the timer is running; changes are saved automatically.
+  - **Ongoing notification** with live chronometer and a direct **Ferma** action while a session is active.
   - Automatic safeguard: starting a new timer automatically concludes any previously active session.
 
 - **✏️ Retroactive Time Adjustments (Edit Start & End Times)**

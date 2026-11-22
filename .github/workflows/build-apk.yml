@@ -40,18 +40,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.3.0
-          name: "StudyTrack v1.3.0 (Productivity Analytics)"
+          tag_name: v1.4.0
+          name: "StudyTrack v1.4.0 (Timer Notifications)"
           body: |
-            ### ⏱️ StudyTrack v1.3.0 — Productivity Analytics
+            ### ⏱️ StudyTrack v1.4.0 — Timer Notifications
 
             Novità:
-            - 🎯 **Focus Score 0–100** basato su costanza, volume di studio, durata media e streak.
-            - 📈 **Trend settimanale** con confronto rispetto ai 7 giorni precedenti.
-            - 📊 **Grafico 14 giorni** con tempo giornaliero e media mobile a 7 giorni.
-            - 🕐 **Quando studi**: distribuzione per ora e giorno della settimana, ora e giorno più produttivi.
-            - 🧠 **Insight contestuali** per migliorare costanza e concentrazione.
-            - ✅ Calcolo preciso anche per sessioni a cavallo di ore e di mezzanotte.
+            - 🔔 **Notifica persistente del timer** con cronometro live quando una sessione è attiva.
+            - ⏹️ Azione **Ferma** direttamente dalla notifica.
+            - 📱 Apertura rapida dell'app toccando la notifica.
+            - ✅ Gestione del permesso notifiche su Android 13+.
+            - ℹ️ Dialog informativo nel Focus Score con criteri e pesi del calcolo.
 
             Scarica `app-debug.apk` qui sotto per installarlo sul tuo smartphone Android.
           files: app/build/outputs/apk/debug/*.apk

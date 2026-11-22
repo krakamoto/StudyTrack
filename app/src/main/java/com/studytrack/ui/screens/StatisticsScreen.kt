@@ -8,10 +8,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -236,6 +240,7 @@ private fun FocusScoreCard(
     analytics: ProductivityAnalytics,
     modifier: Modifier = Modifier
 ) {
+    var showInfo by remember { mutableStateOf(false) }
     val animatedScore by animateFloatAsState(
         targetValue = analytics.focusScore.toFloat(),
         label = "focusScore"
@@ -258,14 +263,31 @@ private fun FocusScoreCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "PRODUTTIVITÀ",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "PRODUTTIVITÀ",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+                IconButton(
+                    onClick = { showInfo = true },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = "Come viene calcolato il Focus Score",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier.size(112.dp),
@@ -341,6 +363,85 @@ private fun FocusScoreCard(
                 text = "Il punteggio combina costanza, tempo studiato, durata media " +
                     "delle sessioni e streak.",
                 style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            title = { Text("Come funziona il Focus Score") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Il Focus Score è un indicatore da 0 a 100; non è un giudizio " +
+                            "sul rendimento, ma un modo per rendere visibili abitudini e costanza."
+                    )
+                    FocusCriterion(
+                        points = "40 punti",
+                        title = "Costanza",
+                        detail = "Giorni con almeno una sessione negli ultimi 7, " +
+                            "rapportati a 7 giorni."
+                    )
+                    FocusCriterion(
+                        points = "30 punti",
+                        title = "Volume di studio",
+                        detail = "Media giornaliera degli ultimi 7 giorni rispetto " +
+                            "a un obiettivo di 2 ore al giorno."
+                    )
+                    FocusCriterion(
+                        points = "20 punti",
+                        title = "Qualità della sessione",
+                        detail = "Durata media delle sessioni degli ultimi 7 giorni " +
+                            "rispetto a 45 minuti."
+                    )
+                    FocusCriterion(
+                        points = "10 punti",
+                        title = "Streak",
+                        detail = "Giorni consecutivi di studio rispetto a una settimana."
+                    )
+                    Text(
+                        text = "I quattro contributi vengono sommati e arrotondati al numero " +
+                            "intero più vicino.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfo = false }) { Text("Ho capito") }
+            }
+        )
+    }
+}
+
+@Composable
+private fun FocusCriterion(points: String, title: String, detail: String) {
+    Row(verticalAlignment = Alignment.Top) {
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        ) {
+            Text(
+                text = points,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
